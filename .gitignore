@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# venv
+venv/
+.venv/
+env/
+
+# редакторы / инструменты
+.claude/
+.vscode/
+.idea/
+*.swp
+.DS_Store

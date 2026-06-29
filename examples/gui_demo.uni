@@ -1,0 +1,20 @@
+// Маленькое окно на UniLand: вводишь имя — получаешь приветствие.
+// Запуск:  uniland run examples/gui_demo.uni
+
+let win = gui_window("Привет, UniLand", 320, 160)
+gui_label(win, "Как тебя зовут?")
+let field = gui_input(win, "")
+let out = gui_label(win, "")
+
+gui_button(win, "Поздороваться", () => {
+    let name = gui_get(field)
+    if (length(name) == 0) {
+        gui_set(out, "Введи имя :)")
+    } else {
+        gui_set(out, `Привет, {name}!`)
+    }
+})
+
+gui_button(win, "Выход", () => { gui_close(win) })
+
+gui_run(win)
