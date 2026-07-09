@@ -47,20 +47,52 @@
   pip install -e .
   ```
 
-  После этого команда `uniland` доступна в терминале:
+  После этого команда `uniland` доступна в терминале и запускается из любого места (кроссплатформенно):
 
   ```bash
   uniland run script.uni
   uniland --version
   ```
 
-  Базовый язык работает без сторонних зависимостей. `requests` нужен только для функций `http_*`:
+  ### Без pip
+
+  Ядро языка работает на голом Python — можно вообще ничего не устанавливать. Из корня репозитория:
 
   ```bash
-  pip install -e ".[http]"
+  python -m uniland run script.uni
   ```
 
-  GUI работает на стандартном `tkinter`, который уже идёт вместе с Python.
+  Чтобы получить глобальную команду `uniland` без pip — запусти установщик (он создаёт лаунчер и работает
+  из любой папки):
+
+  ```bash
+  bash install.sh                 # Linux / macOS  → ~/.local/bin/uniland
+  powershell -ExecutionPolicy Bypass -File install.ps1   # Windows
+  ```
+
+  ### Команды
+
+  ```bash
+  uniland run FILE [args...]   # запустить скрипт (-d/--debug — показать токены)
+  uniland -e "print(2+2)"      # выполнить код одной строкой (или: uniland eval "...")
+  uniland -i                   # интерактивный режим REPL (или: uniland repl)
+  uniland -c FILE              # проверить синтаксис без запуска (или: uniland check FILE)
+  uniland -v                   # версия
+  ```
+
+  ### Зависимости
+
+  Ядро — без сторонних пакетов. При установке через pip автоматически ставится **Pillow**, чтобы картинки
+  всех форматов (jpg/webp/…) и ресайз работали из коробки. Без Pillow нативно поддерживаются png/gif.
+  Опциональные дополнения:
+
+  ```bash
+  pip install -e ".[video]"   # видео в окне (imageio + ffmpeg)
+  pip install -e ".[http]"    # функции http_*  (requests)
+  pip install -e ".[all]"     # всё сразу
+  ```
+
+  GUI работает на стандартном `tkinter`, который идёт вместе с Python.
 
   ---
 
@@ -398,6 +430,35 @@
   | `gui_set(widget, text)` | задать текст |
   | `gui_run(win)` | показать окно (запустить цикл) |
   | `gui_close(win)` | закрыть окно |
+  | `gui_on_close(win, fn)` | вызвать `fn` при закрытии окна (напр. автосохранение) |
+
+  ### Картинки, GIF и видео
+
+  Картинки можно показывать и делать кнопкой — прямо, без Python-вставок. Необязательные `width, height`
+  задают размер. png/gif работают всегда; jpg/webp и ресайз — при установленном Pillow.
+
+  | Функция | Что делает |
+  |---------|------------|
+  | `gui_image(win, path[, w, h])` | показать картинку |
+  | `gui_image_button(win, path, onClick[, w, h])` | **кнопка-картинка** |
+  | `gui_gif(win, path[, w, h])` | анимированный GIF (нативно) |
+  | `gui_video(win, path)` | видео в окне (нужен `[video]`; иначе откроется во внешнем плеере) |
+
+  ```uniland
+  let win = gui_window("Кликер", 300, 300)
+  let out = gui_label(win, "0")
+  let n = 0
+  gui_image_button(win, "button.png", () => { n += 1; gui_set(out, to_string(n)) }, 128, 128)
+  gui_run(win)
+  ```
+
+  Выбор файлов через системные диалоги (возвращают путь или `null`):
+
+  | Функция | Что делает |
+  |---------|------------|
+  | `pick_file([title])` | выбрать существующий файл |
+  | `pick_save([title])` | выбрать путь «сохранить как» |
+  | `pick_folder([title])` | выбрать папку |
 
   Диалоги (можно без своего окна):
 
@@ -472,6 +533,13 @@
   `delete_file(path)`, `list_dir(path)`, `create_dir(path)`, `copy_file(src, dst)`,
   `rename_file(src, dst)`, `file_info(path)`
 
+  **Открытие, архивы, любые файлы**
+  `open_file(path)` — открыть в системном приложении, `open_url(url)` — открыть ссылку,
+  `zip(src, out)` — упаковать файл/папку/массив путей в zip, `unzip(archive, dest)` — распаковать
+  (zip/tar/gztar…), `zip_list(archive)` — список файлов в архиве.
+  Для ЛЮБЫХ (в т.ч. бинарных) файлов: `read_base64(path)`, `write_base64(path, b64)`,
+  `base64_encode(text)`, `base64_decode(b64)`.
+
   **Время**
   `get_time()`, `get_date()`, `sleep(ms)`, `format_time(ts[, fmt])`
 
@@ -500,6 +568,7 @@
   - `selftest.uni` — набор проверок самого интерпретатора: `uniland run examples/selftest.uni`.
   - `greet_cli.uni` — спрашивает имя в консоли и отвечает.
   - `gui_demo.uni` — маленькое окно с приветствием.
+  - `media_demo.uni` — картинки, кнопка-картинка, GIF, выбор файла, zip.
   - `ticker.uni` — долгоживущий скрипт-«служба», тикает раз в секунду (стоп — `Ctrl+C`).
   - `wordcount.uni` — счётчик слов в файле: `uniland run examples/wordcount.uni README.md`.
 

@@ -1,10 +1,13 @@
 import time
 import os
+import sys
 import json
 import re
 import math
 import random
 import shutil
+import base64
+import zipfile
 import subprocess
 from datetime import datetime
 from .errors import UniLandError
@@ -608,6 +611,119 @@ def b_file_info(args):
 
 
 # ---------------------------------------------------------------------------
+# Open in system app / archives / binary files
+# ---------------------------------------------------------------------------
+def _open_in_os(target):
+    if sys.platform.startswith("win"):
+        os.startfile(target)  # type: ignore[attr-defined]
+    elif sys.platform == "darwin":
+        subprocess.run(["open", target])
+    else:
+        subprocess.run(["xdg-open", target])
+
+
+def b_open_file(args):
+    """open_file(path) — открыть файл в системном приложении (кроссплатформенно)."""
+    _need(args, 1, "open_file")
+    try:
+        _open_in_os(args[0])
+        return None
+    except Exception as e:
+        raise UniLandError(f"Failed to open file: {e}")
+
+
+def b_open_url(args):
+    """open_url(url) — открыть ссылку в браузере."""
+    _need(args, 1, "open_url")
+    try:
+        import webbrowser
+        webbrowser.open(args[0])
+        return None
+    except Exception as e:
+        raise UniLandError(f"Failed to open url: {e}")
+
+
+def b_zip(args):
+    """zip(src, out_zip) — упаковать файл, папку или массив путей в zip."""
+    if len(args) < 2:
+        raise UniLandError("zip() expects (src, out_zip)")
+    src, out = args[0], args[1]
+    paths = src if isinstance(src, list) else [src]
+    try:
+        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+            for p in paths:
+                if os.path.isdir(p):
+                    base = os.path.dirname(os.path.normpath(p))
+                    for root, _dirs, files in os.walk(p):
+                        for f in files:
+                            full = os.path.join(root, f)
+                            z.write(full, os.path.relpath(full, base))
+                else:
+                    z.write(p, os.path.basename(p))
+        return None
+    except Exception as e:
+        raise UniLandError(f"Failed to create zip: {e}")
+
+
+def b_unzip(args):
+    """unzip(archive, dest_dir) — распаковать zip/tar/gztar... (авто-детект)."""
+    if len(args) < 2:
+        raise UniLandError("unzip() expects (archive, dest_dir)")
+    try:
+        shutil.unpack_archive(args[0], args[1])
+        return None
+    except Exception as e:
+        raise UniLandError(f"Failed to unzip: {e}")
+
+
+def b_zip_list(args):
+    """zip_list(archive) — массив имён файлов внутри zip."""
+    _need(args, 1, "zip_list")
+    try:
+        with zipfile.ZipFile(args[0], "r") as z:
+            return z.namelist()
+    except Exception as e:
+        raise UniLandError(f"Failed to read zip: {e}")
+
+
+def b_read_base64(args):
+    """read_base64(path) — прочитать любой (в т.ч. бинарный) файл как base64-строку."""
+    _need(args, 1, "read_base64")
+    try:
+        with open(args[0], "rb") as f:
+            return base64.b64encode(f.read()).decode("ascii")
+    except Exception as e:
+        raise UniLandError(f"Failed to read file: {e}")
+
+
+def b_write_base64(args):
+    """write_base64(path, b64) — записать base64-строку обратно в бинарный файл."""
+    if len(args) < 2:
+        raise UniLandError("write_base64() expects (path, base64_string)")
+    try:
+        with open(args[0], "wb") as f:
+            f.write(base64.b64decode(args[1]))
+        return None
+    except Exception as e:
+        raise UniLandError(f"Failed to write file: {e}")
+
+
+def b_base64_encode(args):
+    """base64_encode(text) — закодировать строку в base64."""
+    _need(args, 1, "base64_encode")
+    return base64.b64encode(str(args[0]).encode("utf-8")).decode("ascii")
+
+
+def b_base64_decode(args):
+    """base64_decode(b64) — раскодировать base64 обратно в строку."""
+    _need(args, 1, "base64_decode")
+    try:
+        return base64.b64decode(args[0]).decode("utf-8")
+    except Exception as e:
+        raise UniLandError(f"base64_decode failed: {e}")
+
+
+# ---------------------------------------------------------------------------
 # Time
 # ---------------------------------------------------------------------------
 def b_get_time(args):
@@ -753,6 +869,11 @@ BUILTIN_FUNCTIONS = {
     'file_exists': b_file_exists, 'delete_file': b_delete_file, 'list_dir': b_list_dir,
     'create_dir': b_create_dir, 'copy_file': b_copy_file, 'rename_file': b_rename_file,
     'file_info': b_file_info,
+    # open / archives / binary
+    'open_file': b_open_file, 'open_url': b_open_url,
+    'zip': b_zip, 'unzip': b_unzip, 'zip_list': b_zip_list,
+    'read_base64': b_read_base64, 'write_base64': b_write_base64,
+    'base64_encode': b_base64_encode, 'base64_decode': b_base64_decode,
     # time
     'get_time': b_get_time, 'get_date': b_get_date, 'sleep': b_sleep,
     'format_time': b_format_time,

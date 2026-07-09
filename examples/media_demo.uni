@@ -1,0 +1,53 @@
+// Демонстрация медиа и файлов в UniLand 2.2
+// Запуск:  uniland run examples/media_demo.uni
+//
+// Положи рядом картинку pic.png (png/gif работают без Pillow).
+// GIF и видео — по желанию (anim.gif, clip.mp4).
+
+let win = gui_window("UniLand — медиа", 420, 560)
+gui_label(win, "Картинка, кнопка-картинка, выбор файла и архивы:")
+
+// показать картинку (если её нет — будет понятная ошибка)
+try {
+    gui_image(win, "pic.png", 120, 120)
+} catch (e) {
+    gui_label(win, "нет pic.png — положи картинку рядом")
+}
+
+let out = gui_label(win, "")
+
+// кнопка-картинка: клик считает нажатия
+let clicks = 0
+try {
+    gui_image_button(win, "pic.png", () => {
+        clicks += 1
+        gui_set(out, `Кликов: {clicks}`)
+    }, 96, 96)
+} catch (e) { }
+
+// выбрать любой файл через системный диалог
+gui_button(win, "Выбрать файл…", () => {
+    let f = pick_file("Выбери что-нибудь")
+    if (f == null) {
+        gui_set(out, "Отменено")
+    } else {
+        gui_set(out, `Выбран: {f}`)
+    }
+})
+
+// открыть файл/ссылку в системном приложении
+gui_button(win, "Открыть сайт языка", () => {
+    open_url("https://codeberg.org/moyunni/uniland")
+})
+
+// заархивировать и показать содержимое
+gui_button(win, "Сделать zip из этой папки", () => {
+    zip(".", "demo.zip")
+    gui_set(out, `В архиве: {join(zip_list("demo.zip"), ", ")}`)
+})
+
+// анимированный GIF (если есть)
+try { gui_gif(win, "anim.gif", 160, 120) } catch (e) { }
+
+gui_button(win, "Выход", () => { gui_close(win) })
+gui_run(win)
