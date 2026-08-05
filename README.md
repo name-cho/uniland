@@ -42,7 +42,7 @@
   Нужен Python 3.10 или новее.
 
   ```bash
-  git clone https://github.com/moyunnis/uniland
+  git clone https://github.com/zoyuki/uniland
   cd uniland
   pip install -e .
   ```
