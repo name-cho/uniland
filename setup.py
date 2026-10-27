@@ -3,10 +3,18 @@ from setuptools import setup, find_packages
 setup(
     name="uniland",
     version="2.2.0",
-    description="UniLand — a small, friendly scripting language",
+    description="UniLand — a small, friendly scripting language (Python-версия заморожена, актуальна версия на Go)",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="UniLand",
+    classifiers=[
+        "Development Status :: 7 - Inactive",
+        "Programming Language :: Python :: 3",
+    ],
+    project_urls={
+        "Исходники (архив)": "https://github.com/name-cho/uniland",
+        "Актуальная версия на Go": "https://github.com/name-cho/uniland-go",
+    },
     packages=find_packages(),
     # The interpreter core runs on the standard library alone (so
     # `python -m uniland` works without installing anything). Pillow is a

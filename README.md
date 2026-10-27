@@ -1,3 +1,10 @@
+> **Python-версия UniLand заморожена на 2.2.0.**
+> Разработка переехала в [UniLand на Go](https://github.com/name-cho/uniland-go)
+> ([зеркало на gitgud](https://gitgud.io/name-cho/uniland-go)).
+> Файлы `.uni` работают без изменений; отличия —
+> в [docs/COMPAT.md](https://github.com/name-cho/uniland-go/blob/main/docs/COMPAT.md),
+> порядок перехода — в [MIGRATION.md](MIGRATION.md).
+
   # UniLand
 
   UniLand — маленький дружелюбный язык для скриптов: автоматизация, утилиты, работа с файлами, JSON и HTTP, простые
